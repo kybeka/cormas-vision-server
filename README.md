@@ -1,6 +1,15 @@
 # cormas-vision-server
 
+
+
 ``` st
+"Load Cormas"
+Metacello new
+    repository: 'github://cormas/cormas';
+    baseline: 'Cormas';
+    load.
+
+"Load the Vision server"
 Metacello new
     baseline: 'CormasVisionServer';
     repository: 'github://kybeka/cormas-vision-server:main';
