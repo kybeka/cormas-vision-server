@@ -11,7 +11,7 @@ Class {
 { #category : 'accessing' }
 CMVisionServerCommand class >> server [
 
-	^ server ifNil: [ server := CMGameServer new ] 
+	^ server ifNil: [ server := CMGameServer new ]
 ]
 
 { #category : 'accessing' }
@@ -43,26 +43,42 @@ CMVisionServerCommand >> initialize [
 	super initialize.
 
 	self class server whenDataReceivedDo: [ :data :clientId |
-		| occupiedCellIds harvesters |
-		occupiedCellIds := data at: 'occupiedCells'.
-		harvesters := owner cormasModel @@ PCHarvester.
+		| occupiedCellIds biomassCellIds birdsCellIds protectedCellIds harvesters model allCells |
+		model := owner cormasModel.
+		occupiedCellIds  := data at: 'occupiedCells' ifAbsent: [ #() ].
+		biomassCellIds   := data at: 'biomass'       ifAbsent: [ #() ].
+		birdsCellIds     := data at: 'birds'         ifAbsent: [ #() ].
+		protectedCellIds := data at: 'protected'     ifAbsent: [ #() ].
 
+		"Move harvesters to detected pawn cells"
+		harvesters := model @@ PCHarvester.
 		harvesters do: #leave.
-
 		occupiedCellIds
 			with: (harvesters first: occupiedCellIds size)
-			do: [ :id :harvester |
-				harvester moveTo: (owner cormasModel cellAt: id) ].
+			do: [ :id :harvester | harvester moveTo: (model cellAt: id) ].
+
+		"Sync biomass from green tokens (max level 3)"
+		allCells := model @@ PCCell.
+		allCells do: [ :cell | cell biomass: 0 ].
+		biomassCellIds do: [ :id | (model cellAt: id) biomass: 3 ].
+
+		"Sync birds from yellow tokens"
+		allCells do: [ :cell | cell numberOfNewborns: 0 ].
+		birdsCellIds do: [ :id | (model cellAt: id) numberOfNewborns: 2 ].
+
+		"Sync protection from orange/red tokens"
+		allCells do: [ :cell | cell makeNotProtected ].
+		protectedCellIds do: [ :id | (model cellAt: id) makeProtected ].
 
 		owner updateDiagram ]
 ]
 
 { #category : 'accessing' }
-CMVisionServerCommand >> nameWhenOff [ 
+CMVisionServerCommand >> nameWhenOff [
 	^'Start Server'
 ]
 
 { #category : 'accessing' }
-CMVisionServerCommand >> nameWhenOn [ 
+CMVisionServerCommand >> nameWhenOn [
 	^'Stop Server'
 ]
