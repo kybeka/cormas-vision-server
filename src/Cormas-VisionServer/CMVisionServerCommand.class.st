@@ -37,25 +37,24 @@ CMVisionServerCommand >> iconWhenOn [
 	^self iconNamed: #cancel
 ]
 
-{ #category : 'accessing' }
+{ #category : 'initialization' }
 CMVisionServerCommand >> initialize [
 
 	super initialize.
 
 	self class server whenDataReceivedDo: [ :data :clientId |
-			| occupiedCellIds harvesters |
-			1 halt.
-			occupiedCellIds := data at: 'occupiedCells'.
-			harvesters := owner cormasModel @@ PCHarvester.
+		| occupiedCellIds harvesters |
+		occupiedCellIds := data at: 'occupiedCells'.
+		harvesters := owner cormasModel @@ PCHarvester.
 
-			harvesters do: #leave.
+		harvesters do: #leave.
 
-			occupiedCellIds
-				with: (harvesters first: occupiedCellIds size)
-				do: [ :id :harvester |
+		occupiedCellIds
+			with: (harvesters first: occupiedCellIds size)
+			do: [ :id :harvester |
 				harvester moveTo: (owner cormasModel cellAt: id) ].
 
-			owner updateDiagram ]
+		owner updateDiagram ]
 ]
 
 { #category : 'accessing' }
